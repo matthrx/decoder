@@ -1,66 +1,40 @@
-
-
 function vector = HARD_DECODEUR_GROUPE_4(c, H, p, MAX_ITER)
-   %test
-    M = size(c,1);
-    N = size(H,1);
+    %la fonction de décodage pur
+    M = size(c,1);%taille du variable nodes
+    N = size(H,1);%nombre de check nodes
     i = 1;
-    %while(i<MAX_ITER && parity_checked(c, H))
-        p_bis=[];
-        
-        for j = 1:M %On itère dans le mot code reçu
-            
-            coeff_r = []; % A chaque 
-            coeff_r(1) = p(j); %Aucune autre information dispo, initialisation
-            
-            for k = 1:N
-               % On checke que le noeud est bien un noeud de vérification afin 
-               % d'en déduire que l'on va recevoir un message (page 4)
-               if H(k,j) == 1
-                  produit = 1;
-                  array_without_k = setdiff(1:N,k); % On a donc Vj\i et donc i'
-
-                  for x = array_without_k
-                        if H(k,x) == 1 % On réinspecte qu'un message sera reçu en ce noeud
-                            produit = produit*(1-2*p(x)); % On applique une partie de la formule 3
-                        end
-                  end
-                  coeff_r = [coeff_r 0.5*(1-produit)]; %On stocke tous les coeffs calculés à l'itération j (mot code)
+    while(i<MAX_ITER && parity_checked(c, H))%itération sur un nombre limite ou tant que notre parité n'est pas respectée
+        coeff_r=ones(1, M)%opérations 5&6
+        for j = 1:N %On itère check node par check node        
+            for k = 1:M%On itère au sein de notre check node
+               if H(j,k) == 1%Si la check node reçoit un message de la variable node associée, on valide
+                   array_without_k = setdiff(1:M,k);%on récupère tous les messages des autres variables nodes
+                   produit=1
+                   for x = array_without_k%on itère sur les autres variable nodes
+                       produit=produit*(1-2*p(x))%formule 3 partielle: probabilité qu'il y a un nombre pair de 1 en dehors
+                       %cette formule marche sans éliminer les 0 car si
+                       %p(x)=0 alors notre produit est inchangé
+                   end
+                   produit=0.5+0.5*produit%fin de la formule 3
+                   coeff_r[k]=coeff_r[k]*produit%formule 5&6 partielle: réponse reçue par la variable node                   
                end
-            end
-            
-            q_1 = p(j)*prod(coeff_r);
-            q_0 = (1-p(j))*prod(1-coeff_r);
-            
-            p_bis(j) = q_1/(q_1+q_0); %Formule 5 et 6
-            
-            
-            if (q_1/(q_0+q_1) > 0.5)
-                c(j) = 0;
-            else
-                c(j)=1;
-            end
-            disp value_of_p
-            disp(j)
-            disp(p_bis(j))
-            
+            end           
         end
-        disp pbis
-        disp(p_bis)
-        %Fin d'itération, autre condition pour quit ? - On actualise 
-        p = p_bis;
-        % si le nouveau mot code remplit la condition de parité over sinon
-        % on réitère (while)
-    %end
+        
+        %c'est pas bon parce que on est sensé ignorer la node consernée
+        %dans notre nouvelle réponse.
+        %gros problème innatendu: une vector node peut envoyer des
+        %informations différentes à plusieures check nodes
+        %conclusion: besoin de faire une matrice de messages à envoyer et
+        %faire un produit matriciel
+        
+        %les check nodes ont fini d'envoyer leurs réponse
+        q_0=(1-p).*coeff_r%continuation de la formule 5
+        q_1=p.*(1-coeff_r)%continuation de la formule 6
+        Kij=1./(q_0+q_1)%settings de nos Kij
+        q_0=q_0.*Kij%fin de la formule 5
+        q_1=q_1.*Kij%fin de la formule 6
+        p=q_1
+    end
     vector=c;
-end
-
-function parity = parity_checked(c, H)
-      % fonction return true si parité n'est pas vérfifée, false sinon
-      parity = true;
-      test_vector = H*c;
-      if mod(test_vector, 2) ~= zeros(size(test_vector,1), size(test_vector,2))
-          parity = false;
-      
-      end
 end
