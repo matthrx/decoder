@@ -22,7 +22,6 @@ function vector = SOFT_DECODEUR_GROUPE_41(c, H, p, MAX_ITER)
         %vérification que l'on envoie des messages uniquement aux bonnes
         %check nodes
         Qij = Qij.*H;
-        disp(Qij)
         %initialisation de la réponse de nos check nodes
         Rij_0=[];
         
@@ -54,9 +53,7 @@ function vector = SOFT_DECODEUR_GROUPE_41(c, H, p, MAX_ITER)
         Rij_1=1-Rij_0;
         % Fin calcul de Rij
         %Rij confirmé bon sur un exemple à la main
-        
-        disp Rij_1
-        disp(Rij_1)
+    
         % Calcul de Q
         %parcours de Rij value node par value node
         for k = 1:colonne_c
@@ -106,12 +103,8 @@ function vector = SOFT_DECODEUR_GROUPE_41(c, H, p, MAX_ITER)
                c(k)=0;
             end     
         end
-        disp Qij
-        disp(Qij)
-        disp(p')
         iter=iter+1;
     end
-    %disp(Qij)
     vector=c;
 end
 
